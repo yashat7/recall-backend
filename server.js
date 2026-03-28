@@ -29,7 +29,7 @@ console.log("Extracted recordingId:", recordingId);
 
   console.log("🎯 Triggering transcript for:", recordingId);
 
-  try {
+try {
   await axios.post(
     `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
     {
@@ -48,8 +48,7 @@ console.log("Extracted recordingId:", recordingId);
   console.log("✅ Transcript started");
 } catch (err) {
   console.error("❌ Error:", err.response?.data || err.message);
-}
-    
+}    
     // ✅ STEP 5: When transcript is ready → fetch + process
     if (event === "recording.analysis_done") {
       console.log("📥 Fetching transcript for:", recordingId);
