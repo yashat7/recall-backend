@@ -34,12 +34,8 @@ console.log("Extracted recordingId:", recordingId);
   `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
   {
     provider: {
-  deepgram_async: {
-    detect_language: true,
-    language: "multi"
-      }
-      }
-    },
+  deepgram_async: {}
+},
   {
     headers: {
       Authorization: `Token ${process.env.RECALL_API_KEY}`,
