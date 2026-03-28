@@ -32,10 +32,8 @@ console.log("Extracted recordingId:", recordingId);
   try {
     await axios.post(
       `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
-    provider: {
-  openai_whisper_async: {
-    language: "auto"
-  }
+provider: {
+  google_speech_v2_async: {}
 },
       },
       {
