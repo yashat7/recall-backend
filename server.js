@@ -31,17 +31,19 @@ console.log("Extracted recordingId:", recordingId);
 
   try {
     await axios.post(
-      `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
-provider: {
-  google_speech_v2_async: {}
-},
-      },
-      {
-        headers: {
-          Authorization: `Token ${RECALL_API_KEY}`,
-        },
-      }
-    );
+  `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
+  {
+    provider: {
+      google_speech_v2_async: {}
+    }
+  },
+  {
+    headers: {
+      Authorization: `Token ${process.env.RECALL_API_KEY}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
 
     console.log("✅ Transcript started");
   } catch (err) {
