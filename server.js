@@ -16,21 +16,24 @@ app.post("/webhook", async (req, res) => {
     console.log("🎯 Triggering transcript for:", recordingId);
 
     try {
-      await axios.post(
-        `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
-        {
-          provider: {
-            deepgram_async: {}
-          }
-        },
-        {
-          headers: {
-            Authorization: `Token ${process.env.RECALL_API_KEY}`,
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
+await axios.post(
+  `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
+  {
+    provider: {
+      deepgram_async: {
+        model: "nova-2",
+        language: "en",
+        smart_format: true
+      }
+    }
+  },
+  {
+    headers: {
+      Authorization: `Token ${process.env.RECALL_API_KEY}`,
+      "Content-Type": "application/json"
+    }
+  }
+);
       console.log("✅ Transcript started");
     } catch (err) {
       console.error("❌ Error:", err.response?.data || err.message);
