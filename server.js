@@ -1,3 +1,12 @@
+const express = require("express");
+const axios = require("axios");
+
+const app = express();
+app.use(express.json());
+
+const RECALL_API_KEY = process.env.RECALL_API_KEY;
+
+// 🔥 WEBHOOK
 app.post("/webhook", async (req, res) => {
   console.log("📩 Webhook received:", JSON.stringify(req.body, null, 2));
 
@@ -6,85 +15,64 @@ app.post("/webhook", async (req, res) => {
 
   console.log("Extracted recordingId:", recordingId);
 
-  // ✅ EVENT 1 — CREATE TRANSCRIPT
   if (event === "recording.done") {
     if (!recordingId) {
-      console.log("❌ No recording ID found");
+      console.log("❌ No recording ID");
       return res.send("No recording ID");
     }
 
-    console.log("🎯 Triggering transcript for:", recordingId);
+    console.log("🎯 Processing recording:", recordingId);
 
     try {
-await axios.post(
-  `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/create_transcript/`,
-  {
-    provider: {
-      deepgram_async: {
-        model: "nova-2",
-        language: "en",
-        smart_format: true
+      // ✅ Get recording details
+      const response = await axios.get(
+        `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/`,
+        {
+          headers: {
+            Authorization: `Token ${RECALL_API_KEY}`,
+          },
+        }
+      );
+
+      const audioUrl =
+        response.data?.recordings?.[0]?.media_shortcuts?.audio?.download_url;
+
+      console.log("🎧 Audio URL:", audioUrl);
+
+      if (!audioUrl) {
+        console.log("❌ No audio URL");
+        return res.send("No audio");
       }
-    }
-  },
-  {
-    headers: {
-      Authorization: `Token ${process.env.RECALL_API_KEY}`,
-      "Content-Type": "application/json"
-    }
-  }
-);
-      console.log("✅ Transcript started");
+
+      // ✅ Send to Deepgram
+      const dgResponse = await axios.post(
+        `https://api.deepgram.com/v1/listen?model=nova-2&detect_language=true`,
+        {
+          url: audioUrl,
+        },
+        {
+          headers: {
+            Authorization: `Token ${process.env.DEEPGRAM_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const transcript =
+        dgResponse.data.results.channels[0].alternatives[0].transcript;
+
+      console.log("📝 TRANSCRIPT:", transcript);
     } catch (err) {
       console.error("❌ Error:", err.response?.data || err.message);
     }
   }
 
-  // ✅ EVENT 2 — FETCH TRANSCRIPT
-  if (event === "recording.analysis_done") {
-    if (!recordingId) {
-      console.log("❌ No recording ID for analysis");
-      return res.send("No recording ID");
-    }
-
-    console.log("📥 Fetching transcript for:", recordingId);
-
-    try {
-      const response = await axios.get(
-        `https://ap-northeast-1.recall.ai/api/v1/recording/${recordingId}/`,
-        {
-          headers: {
-            Authorization: `Token ${process.env.RECALL_API_KEY}`,
-          },
-        }
-      );
-
-      const transcriptUrl =
-        response.data.recordings?.[0]?.media_shortcuts?.transcript?.data?.download_url;
-
-      if (!transcriptUrl) {
-        console.log("⏳ Transcript not ready yet");
-        return res.send("Transcript not ready");
-      }
-
-      const transcriptRes = await axios.get(transcriptUrl);
-      const transcriptText = JSON.stringify(transcriptRes.data);
-
-      console.log("🧠 Generating summary...");
-
-      const result = {
-        english: "Summary will come here",
-        hindi: "हिंदी सारांश यहाँ आएगा",
-        marathi: "मराठी सारांश येथे येईल",
-        telugu: "తెలుగు సారాంశం ఇక్కడ येईल",
-      };
-
-      console.log("✅ FINAL OUTPUT:", result);
-
-    } catch (error) {
-      console.error("❌ Error:", error.response?.data || error.message);
-    }
-  }
-
   res.send("OK");
 });
+
+// 🚀 SERVER
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});	
