@@ -34,8 +34,7 @@ app.post("/webhook", async (req, res) => {
         }
       );
 
-      const audioUrl =
-        response.data?.recordings?.[0]?.media_shortcuts?.audio?.download_url;
+      const audioUrl = response.data?.data?.download_url;
 
       console.log("🎧 Audio URL:", audioUrl);
 
